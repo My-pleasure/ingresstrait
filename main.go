@@ -26,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	corev1alpha1 "ingresstrait/api/v1alpha1"
+	corev1alpha2 "ingresstrait/api/v1alpha2"
 	"ingresstrait/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -39,7 +39,7 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
-	_ = corev1alpha1.AddToScheme(scheme)
+	_ = corev1alpha2.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 

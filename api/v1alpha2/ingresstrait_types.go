@@ -14,12 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -27,20 +25,22 @@ import (
 
 // IngressTraitSpec defines the desired state of IngressTrait
 type IngressTraitSpec struct {
-	// WorkloadReference to the workload this trait applies to.
-	WorkloadReference runtimev1alpha1.TypedReference `json:"workloadRef"`
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// Foo is an example field of IngressTrait. Edit IngressTrait_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
 // IngressTraitStatus defines the observed state of IngressTrait
 type IngressTraitStatus struct {
-	runtimev1alpha1.ConditionedStatus `json:",inline"`
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
 
 // IngressTrait is the Schema for the ingresstraits API
-// +kubebuilder:resource:categories={crossplane,oam}
-// +kubebuilder:subresource:status
 type IngressTrait struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

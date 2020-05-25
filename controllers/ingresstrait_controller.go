@@ -24,14 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	corev1alpha1 "ingresstrait/api/v1alpha1"
-)
-
-// Reconcile error strings.
-const (
-	errLocateWorkload    = "cannot find workload"
-	errLocateResources   = "cannot find resources"
-	errLocateStatefulSet = "cannot find statefulset"
+	corev1alpha2 "ingresstrait/api/v1alpha2"
 )
 
 // IngressTraitReconciler reconciles a IngressTrait object
@@ -41,31 +34,20 @@ type IngressTraitReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=core.oam.dev,resources=ingresstraits,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core.oam.dev,resources=ingresstraits,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.oam.dev,resources=ingresstraits/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core.oam.dev,resources=statefulsetworkloads,verbs=get;list;
-// +kubebuilder:rbac:groups=core.oam.dev,resources=statefulsetworkloads/status,verbs=get;
-// +kubebuilder:rbac:groups=apps,resources=statefulset,verbs=get;list;watch;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 
 func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
-	log := r.Log.WithValues("ingresstrait", req.NamespacedName)
-	log.Info("Reconcile Ingress Trait")
+	_ = context.Background()
+	_ = r.Log.WithValues("ingresstrait", req.NamespacedName)
 
-	var ingress corev1alpha1.IngressTrait
-	if err := r.Get(ctx, req.NamespacedName, &ingress); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	log.Info("Get the ingress trait", "WorkloadReference", ingress.Spec.WorkloadReference)
-
-	//2020.5.19 21:00
+	// your logic here
 
 	return ctrl.Result{}, nil
 }
 
 func (r *IngressTraitReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&corev1alpha1.IngressTrait{}).
+		For(&corev1alpha2.IngressTrait{}).
 		Complete(r)
 }
