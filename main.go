@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/crossplane/oam-kubernetes-runtime/apis/core"
 	corev1alpha2 "ingresstrait/api/v1alpha2"
 	"ingresstrait/controllers"
 	// +kubebuilder:scaffold:imports
@@ -40,6 +41,9 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	_ = corev1alpha2.AddToScheme(scheme)
+
+	// you should add WorkloadDefinition to scheme
+	_ = core.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
