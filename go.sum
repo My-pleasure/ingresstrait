@@ -86,6 +86,8 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
 github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200519023759-42e82c49fb67 h1:Fvnvyj3RDMuge/KJk9lXTao6CdZP6L02lcm1IM1JK3A=
 github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200519023759-42e82c49fb67/go.mod h1:UKhex91y0xVBmGJN8bipUi5zjxU8L0a+1KufMVjpoQg=
+github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200522083149-1bc0918a6ce9 h1:kAorKV63iuffi1TNLNjI5U0m0zo1O+ic6ztHAJBNgMo=
+github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200522083149-1bc0918a6ce9/go.mod h1:UKhex91y0xVBmGJN8bipUi5zjxU8L0a+1KufMVjpoQg=
 github.com/crossplane/crossplane-runtime v0.8.0 h1:IBm5LWVeqB2BjHpkykURHY0PSozXWfIXk7LfWtr27wY=
 github.com/crossplane/crossplane-runtime v0.8.0/go.mod h1:gNY/21MLBaz5KNP7hmfXbBXp8reYRbwY5B/97Kp4tgM=
 github.com/crossplane/crossplane-tools v0.0.0-20200219001116-bb8b2ce46330/go.mod h1:C735A9X0x0lR8iGVOOxb49Mt70Ua4EM2b7PGaRPBLd4=

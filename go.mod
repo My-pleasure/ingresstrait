@@ -16,4 +16,4 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.0
 )
 
-replace github.com/crossplane/oam-controllers => github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200519023759-42e82c49fb67
+replace github.com/crossplane/oam-controllers => github.com/crossplane/addon-oam-kubernetes-local v0.0.0-20200522083149-1bc0918a6ce9

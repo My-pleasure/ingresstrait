@@ -21,4 +21,13 @@ spec:
             kind: IngressTrait
             metadata:
               name: example-appconfig-trait-ingress
+            spec:
+              rules:
+                - host: ingress.test.com
+                  http:
+                    paths:
+                      - path: /
+                        backend:
+                          serviceName: example-appconfig-workload-svc
+                          servicePort: 80
 

@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"k8s.io/api/networking/v1beta1"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,6 +45,8 @@ func init() {
 
 	// you should add WorkloadDefinition to scheme
 	_ = core.AddToScheme(scheme)
+
+	_ = v1beta1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 

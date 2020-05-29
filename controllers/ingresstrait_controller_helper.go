@@ -33,7 +33,13 @@ func (r *IngressTraitReconciler) renderIngress(ctx context.Context,
 	}
 	// if you don't set the annotations to specify IngressClassName, it will be the default.
 	ingress.ObjectMeta.Annotations = make(map[string]string)
-	ingress.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+	if trait.ObjectMeta.Annotations != nil {
+		for k, v := range trait.ObjectMeta.Annotations {
+			ingress.ObjectMeta.Annotations[k] = v
+		}
+	} else {
+		ingress.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+	}
 	// always set the controller reference so that we can watch this ingress.
 	if err := ctrl.SetControllerReference(trait, ingress, r.Scheme); err != nil {
 		return nil, err
