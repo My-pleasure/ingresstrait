@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	cpv1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/oam-kubernetes-runtime/pkg/oam"
@@ -57,8 +56,11 @@ type IngressTraitReconciler struct {
 // +kubebuilder:rbac:groups=core.oam.dev,resources=ingresstraits/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core.oam.dev,resources=statefulsetworkloads,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core.oam.dev,resources=statefulsetworkloads/status,verbs=get;
+// +kubebuilder:rbac:groups=core.oam.dev,resources=containerizedworkloads,verbs=get;list;
+// +kubebuilder:rbac:groups=core.oam.dev,resources=containerizedworkloads/status,verbs=get;
 // +kubebuilder:rbac:groups=core.oam.dev,resources=workloaddefinitions,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -78,15 +80,15 @@ func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		return result, err
 	}
 
-	// Fetch the child resources list from the corresponding workload
-	resources, err := util.FetchWorkloadDefinition(ctx, log, r, workload)
+	// Determine the workload type
+	resources, err := DetermineWorkloadType(ctx, log, r, workload)
 	if err != nil {
 		r.Log.Error(err, "Cannot find the workload child resources", "workload", workload.UnstructuredContent())
 		return util.ReconcileWaitResult,
 			util.PatchCondition(ctx, r, &trait, cpv1alpha1.ReconcileError(fmt.Errorf(errLocateResources)))
 	}
 
-	// Create a ingress for the child resources we know
+	// Create a ingress for the resources we know
 	ingress, err := r.createIngress(ctx, trait, resources)
 	if err != nil {
 		return result, err
@@ -125,20 +127,14 @@ func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 
 func (r *IngressTraitReconciler) createIngress(ctx context.Context, ingressTr corev1alpha2.IngressTrait,
 	resources []*unstructured.Unstructured) (*v1beta1.Ingress, error) {
-	// Change unstructured to object
 	for _, res := range resources {
-		if res.GetKind() == KindStatefulSet && res.GetAPIVersion() == appsv1.SchemeGroupVersion.String() {
-			r.Log.Info("Get the statefulset the trait is going to create a ingress for it",
-				"statefulset name", res.GetName(), "UID", res.GetUID())
-			// convert the unstructured to statefulset and create a ingress
-			var ss appsv1.StatefulSet
-			bts, _ := json.Marshal(res)
-			if err := json.Unmarshal(bts, &ss); err != nil {
-				r.Log.Error(err, "Failed to convert an unstructured obj to a statefulset")
-				continue
-			}
+		// Determine whether APIVersion is "appsv1"
+		if res.GetAPIVersion() == appsv1.SchemeGroupVersion.String() {
+			r.Log.Info("Get the resources the trait is going to create a ingress for it",
+				"resources name", res.GetName(), "UID", res.GetUID())
+
 			// Create a ingress for the workload which this trait is referring to
-			ingress, err := r.renderIngress(ctx, &ingressTr, &ss)
+			ingress, err := r.renderIngress(ctx, &ingressTr, res)
 			if err != nil {
 				r.Log.Error(err, "Failed to render a ingress")
 				return nil, util.PatchCondition(ctx, r, &ingressTr, cpv1alpha1.ReconcileError(errors.Wrap(err, errRenderIngress)))

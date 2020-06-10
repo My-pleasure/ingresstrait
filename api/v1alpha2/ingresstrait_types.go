@@ -24,14 +24,9 @@ import (
 
 // IngressTraitSpec defines the desired state of IngressTrait
 type IngressTraitSpec struct {
-	// Same fields as IngressTLS
-	// +optional
-	TLS []v1beta1.IngressTLS `json:"tls,omitempty"`
-
-	// Same fields as IngressRule
-	// If you don't set ServiceName and ServicePort, they have default values
-	// +optional
-	Rules []v1beta1.IngressRule `json:"rules,omitempty"`
+	// NOTE: You can add extension of IngressTraitSpec in the future
+	// K8S natice IngressSpec
+	Template v1beta1.IngressSpec `json:"template,omitempty"`
 
 	// WorkloadReference to the workload this trait applies to.
 	WorkloadReference runtimev1alpha1.TypedReference `json:"workloadRef"`

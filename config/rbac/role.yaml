@@ -9,6 +9,17 @@ rules:
 - apiGroups:
   - apps
   resources:
+  - deployments
+  verbs:
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
   - statefulsets
   verbs:
   - delete
@@ -18,28 +29,25 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
+  - core.oam.dev
   resources:
-  - ingresses
+  - containerizedworkloads
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
-  - watch
+- apiGroups:
+  - core.oam.dev
+  resources:
+  - containerizedworkloads/status
+  verbs:
+  - get
 - apiGroups:
   - core.oam.dev
   resources:
   - ingresstraits
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - core.oam.dev
@@ -70,4 +78,16 @@ rules:
   verbs:
   - get
   - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
   - watch

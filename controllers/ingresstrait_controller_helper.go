@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/crossplane/oam-kubernetes-runtime/pkg/oam"
 	corev1alpha2 "ingresstrait/api/v1alpha2"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/networking/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -14,16 +13,15 @@ import (
 )
 
 const (
-	KindIngress     = "Ingress"
-	KindStatefulSet = "StatefulSet"
+	KindIngress = "Ingress"
 )
 
 // TODO:IngressTrait can more than create ingress for the statefulset
 // create a ingress for the statefulset
 func (r *IngressTraitReconciler) renderIngress(ctx context.Context,
-	trait *corev1alpha2.IngressTrait, set *appsv1.StatefulSet) (*v1beta1.Ingress, error) {
+	trait *corev1alpha2.IngressTrait, obj oam.Object) (*v1beta1.Ingress, error) {
 	// create a ingress for the ingresstrait
-	resources, err := IngressInjector(ctx, trait, []oam.Object{set})
+	resources, err := IngressInjector(ctx, trait, []oam.Object{obj})
 	if err != nil {
 		return nil, err
 	}
@@ -32,14 +30,14 @@ func (r *IngressTraitReconciler) renderIngress(ctx context.Context,
 		return nil, fmt.Errorf("internal error, ingress is not rendered correctly")
 	}
 	// if you don't set the annotations to specify IngressClassName, it will be the default.
-	ingress.ObjectMeta.Annotations = make(map[string]string)
-	if trait.ObjectMeta.Annotations != nil {
-		for k, v := range trait.ObjectMeta.Annotations {
-			ingress.ObjectMeta.Annotations[k] = v
-		}
-	} else {
-		ingress.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
-	}
+	//ingress.ObjectMeta.Annotations = make(map[string]string)
+	//if trait.ObjectMeta.Annotations != nil {
+	//	for k, v := range trait.ObjectMeta.Annotations {
+	//		ingress.ObjectMeta.Annotations[k] = v
+	//	}
+	//} else {
+	//	ingress.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+	//}
 	// always set the controller reference so that we can watch this ingress.
 	if err := ctrl.SetControllerReference(trait, ingress, r.Scheme); err != nil {
 		return nil, err

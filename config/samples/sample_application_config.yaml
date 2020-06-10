@@ -4,30 +4,31 @@ metadata:
   name: example-appconfig
 spec:
   components:
-    - componentName: example-component
-      parameterValues:
-        - name: instance-name
-          value: example-appconfig-workload
-        - name: image
-          value: nginx:latest
+    - componentName: example-sts
       traits:
         - trait:
             apiVersion: core.oam.dev/v1alpha2
             kind: ServiceTrait
             metadata:
-              name:  example-appconfig-trait
+              name: example-service-trait
+            spec:
+              template:
+                ports:
+                  - port: 80
+                    name: nginx
+                    targetPort: 80
         - trait:
             apiVersion: core.oam.dev/v1alpha2
             kind: IngressTrait
             metadata:
-              name: example-appconfig-trait-ingress
+              name: example-ingress-trait
             spec:
-              rules:
-                - host: ingress.test.com
-                  http:
-                    paths:
-                      - path: /
-                        backend:
-                          serviceName: example-appconfig-workload-svc
-                          servicePort: 80
-
+              template:
+                rules:
+                  - host: nginx.oam.com
+                    http:
+                      paths:
+                        - path: /
+                          backend:
+                            serviceName: test
+                            servicePort: 80
