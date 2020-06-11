@@ -15,14 +15,14 @@ const (
 	errNotIngressTrait = "object is not a service trait"
 )
 
-const LabelKey = "servicetrait.oam.crossplane.io"
+const LabelKey = "ingresstrait.oam.crossplane.io"
 
 var (
 	ingressKind       = reflect.TypeOf(v1beta1.Ingress{}).Name()
 	ingressAPIVersion = v1beta1.SchemeGroupVersion.String()
 )
 
-// IngressInjector adds a Ingress object for the StatefulSet observed in a workload translation.
+// IngressInjector adds a Ingress object for the resources observed in a workload translation.
 func IngressInjector(ctx context.Context, trait oam.Trait, objs []oam.Object) ([]oam.Object, error) {
 	t, ok := trait.(*corev1alpha2.IngressTrait)
 	if !ok {

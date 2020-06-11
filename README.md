@@ -15,13 +15,13 @@ git clone https://github.com/My-pleasure/ingresstrait.git
 ```
 - Fetch the IngressTrait image
 ```
-docker pull chienwong/ingresstrait:v1.0
+docker pull chienwong/ingresstrait:v1.1
 ```
 - Deploy the IngressTrait controller
 ```
 cd ingresstrait/
 
-make deploy IMG=chienwong/ingresstrait:v1.0
+make deploy IMG=chienwong/ingresstrait:v1.1
 ```
 - Apply the sample application config
 ```

@@ -17,8 +17,6 @@ var (
 	appsAPIVersion     = appsv1.SchemeGroupVersion.String()
 )
 
-const KindStatefulSet = "StatefulSet"
-
 // Determine whether the workload is K8S native resources or oam WorkloadDefinition
 func DetermineWorkloadType(ctx context.Context, log logr.Logger, r client.Reader,
 	workload *unstructured.Unstructured) ([]*unstructured.Unstructured, error) {

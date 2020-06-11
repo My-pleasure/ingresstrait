@@ -46,6 +46,7 @@ func init() {
 	// you should add WorkloadDefinition to scheme
 	_ = core.AddToScheme(scheme)
 
+	// you should add ingress to scheme
 	_ = v1beta1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }

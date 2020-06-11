@@ -37,12 +37,11 @@ import (
 
 // Reconcile error strings.
 const (
-	errLocateWorkload    = "cannot find workload"
-	errLocateResources   = "cannot find resources"
-	errLocateStatefulSet = "cannot find statefulset"
-	errApplyIngress      = "cannot apply the ingress"
-	errRenderIngress     = "cannot render ingress"
-	errGCIngress         = "cannot clean up stale ingress"
+	errLocateWorkload  = "cannot find workload"
+	errLocateResources = "cannot find resources"
+	errApplyIngress    = "cannot apply the ingress"
+	errRenderIngress   = "cannot render ingress"
+	errGCIngress       = "cannot clean up stale ingress"
 )
 
 // IngressTraitReconciler reconciles a IngressTrait object
@@ -61,6 +60,7 @@ type IngressTraitReconciler struct {
 // +kubebuilder:rbac:groups=core.oam.dev,resources=workloaddefinitions,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -142,8 +142,8 @@ func (r *IngressTraitReconciler) createIngress(ctx context.Context, ingressTr co
 			return ingress, nil
 		}
 	}
-	r.Log.Info("Cannot locate any statefulset", "total resources", len(resources))
-	return nil, util.PatchCondition(ctx, r, &ingressTr, cpv1alpha1.ReconcileError(fmt.Errorf(errLocateStatefulSet)))
+	r.Log.Info("Cannot locate any resources", "total resources", len(resources))
+	return nil, util.PatchCondition(ctx, r, &ingressTr, cpv1alpha1.ReconcileError(fmt.Errorf(errLocateResources)))
 }
 
 func (r *IngressTraitReconciler) fetchWorkload(ctx context.Context,
