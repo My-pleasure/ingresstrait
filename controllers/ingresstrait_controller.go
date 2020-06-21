@@ -115,9 +115,10 @@ func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		}
 		log.Info("Successfully applied a service", "UID", service.UID)
 	} else {
+		// If we don't need to create a service, service.UID must have a value or the cleanupResources will panic
 		service = &corev1.Service{}
-		service.UID = types.UID(-1)
-		r.Log.Info("none", "UID", service.UID)
+		service.UID = types.UID(0)
+		r.Log.Info("We don't need to create a service", "UID", service.UID)
 	}
 
 	// garbage collect the ingress that we created but not needed
@@ -134,13 +135,16 @@ func (r *IngressTraitReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		Name:       ingress.GetName(),
 		UID:        ingress.GetUID(),
 	})
+
 	// record the new service
-	trait.Status.Resources = append(trait.Status.Resources, cpv1alpha1.TypedReference{
-		APIVersion: service.GetObjectKind().GroupVersionKind().GroupVersion().String(),
-		Kind:       service.GetObjectKind().GroupVersionKind().Kind,
-		Name:       service.GetName(),
-		UID:        service.GetUID(),
-	})
+	if service.UID != types.UID(0) {
+		trait.Status.Resources = append(trait.Status.Resources, cpv1alpha1.TypedReference{
+			APIVersion: service.GetObjectKind().GroupVersionKind().GroupVersion().String(),
+			Kind:       service.GetObjectKind().GroupVersionKind().Kind,
+			Name:       service.GetName(),
+			UID:        service.GetUID(),
+		})
+	}
 
 	if err := r.Status().Update(ctx, &trait); err != nil {
 		return util.ReconcileWaitResult, err

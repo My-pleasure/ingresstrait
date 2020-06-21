@@ -23,31 +23,6 @@ const (
 	KindService = "Service"
 )
 
-// get the service information to create the ingress
-func (r *IngressTraitReconciler) getServiceInfo(ctx context.Context, resources []*unstructured.Unstructured) (*v1beta1.IngressBackend, error) {
-	var serviceInfo v1beta1.IngressBackend
-	// Determine whether the workload has a service or not
-	if len(resources) == 1 {
-		// It turns out to be a K8S native resource
-	} else {
-		for _, res := range resources {
-			if res.GetAPIVersion() == corev1.SchemeGroupVersion.String() && res.GetKind() == KindService {
-				r.Log.Info("Get the Service chiled resource of the workload",
-					"Service name", res.GetName(), "UID", res.GetUID())
-				var svc corev1.Service
-				bts, _ := json.Marshal(res)
-				if err := json.Unmarshal(bts, &svc); err != nil {
-					return nil, errors.Wrap(err, "Failed to convert an unstructured obj to a service")
-				}
-				serviceInfo.ServiceName = svc.Name
-				serviceInfo.ServicePort = intstr.FromInt(int(svc.Spec.Ports[0].Port))
-			}
-		}
-	}
-
-	return &serviceInfo, nil
-}
-
 // create a ingress for the workload
 func (r *IngressTraitReconciler) renderIngress(ctx context.Context, trait *corev1alpha2.IngressTrait,
 	obj oam.Object, svcInfo *v1beta1.IngressBackend) (*corev1.Service, *v1beta1.Ingress, error) {
@@ -69,13 +44,13 @@ func (r *IngressTraitReconciler) renderIngress(ctx context.Context, trait *corev
 	} else {
 		service, ok = resources[1].(*corev1.Service)
 		if !ok {
-			return nil, nil, fmt.Errorf("internal error, ingress is not rendered correctly")
+			return nil, nil, fmt.Errorf("internal error, service is not rendered correctly")
 		}
 		if err := ctrl.SetControllerReference(trait, service, r.Scheme); err != nil {
 			return nil, nil, err
 		}
 
-		ingress, ok = resources[1].(*v1beta1.Ingress)
+		ingress, ok = resources[2].(*v1beta1.Ingress)
 		if !ok {
 			return nil, nil, fmt.Errorf("internal error, ingress is not rendered correctly")
 		}
@@ -109,7 +84,7 @@ func (r *IngressTraitReconciler) cleanupResources(ctx context.Context,
 				}
 				log.Info("Removed an orphaned ingress", "orphaned UID", uid)
 			}
-		} else if res.Kind == util.KindService && res.APIVersion == corev1.SchemeGroupVersion.String() {
+		} else if res.Kind == util.KindService && res.APIVersion == corev1.SchemeGroupVersion.String() && *serviceUID != types.UID(0) {
 			if uid != *serviceUID {
 				log.Info("Found an orphaned service", "orphaned  UID", uid)
 				sn := client.ObjectKey{Name: res.Name, Namespace: ingressTr.Namespace}
@@ -127,4 +102,30 @@ func (r *IngressTraitReconciler) cleanupResources(ctx context.Context,
 		}
 	}
 	return nil
+}
+
+// get the service information to create the ingress
+func (r *IngressTraitReconciler) getServiceInfo(ctx context.Context, resources []*unstructured.Unstructured) (*v1beta1.IngressBackend, error) {
+	var serviceInfo v1beta1.IngressBackend
+	// Determine whether the workload has a service or not
+	if len(resources) == 1 {
+		// It turns out to be a K8S native resource
+		// TODO: If the resource already has a service, we might be able to get its information by the selector
+	} else {
+		for _, res := range resources {
+			if res.GetAPIVersion() == corev1.SchemeGroupVersion.String() && res.GetKind() == KindService {
+				r.Log.Info("Get the Service chiled resource of the workload",
+					"Service name", res.GetName(), "UID", res.GetUID())
+				var svc corev1.Service
+				bts, _ := json.Marshal(res)
+				if err := json.Unmarshal(bts, &svc); err != nil {
+					return nil, errors.Wrap(err, "Failed to convert an unstructured obj to a service")
+				}
+				serviceInfo.ServiceName = svc.Name
+				serviceInfo.ServicePort = intstr.FromInt(int(svc.Spec.Ports[0].Port))
+			}
+		}
+	}
+
+	return &serviceInfo, nil
 }

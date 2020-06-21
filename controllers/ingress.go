@@ -43,14 +43,14 @@ func (r *IngressTraitReconciler) IngressInjector(ctx context.Context, trait oam.
 
 	nilStruct := v1beta1.IngressBackend{}
 	if *svcInfo == nilStruct {
-		r.Log.Info("svcInfo is nil")
+		r.Log.Info("serviceInfo is nil, we'll create a service")
 		var err error
 		objs, svcInfo, err = ServiceInjector(ctx, t, objs)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		r.Log.Info("svcInfo is not nil", "svcInfo", svcInfo)
+		r.Log.Info("serviceInfo is not nil", "serviceInfo", svcInfo)
 	}
 
 	ingress := &v1beta1.Ingress{
