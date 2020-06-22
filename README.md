@@ -1,11 +1,12 @@
 # IngressTrait
+- If the workload type is K8S native resources which has no service and defines `ingresstrait.spec.rules.paths.backend`, IngressTrait will create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create corresponding ingress. 
 - If the workload type is [ContainerizedWorkload](https://github.com/crossplane/addon-oam-kubernetes-local) which has two child resources (Deployment and Service), IngressTrait can help to create corresponding ingress based on the child Service.
-- If the workload type is K8S native resources ([StatefulSet](https://github.com/oam-dev/catalog/blob/master/workloads/statefulset/README.md) or [Deployment](https://github.com/oam-dev/catalog/blob/master/workloads/deployment/README.md)), IngressTrait can help to create a Service based on `spec.template.spec.contaiers` firstly, and then create corresponding ingress. 
+- If the workload type is K8S native resources which has no service and doesn't define `ingresstrait.spec.rules.paths.backend`, IngressTrait can help to create a Service based on `spec.template.spec.contaiers` firstly, and then create corresponding ingress. 
 
 ## Supported workloads:
 - ContainerizedWorkload
-- StatefulSet
-- Deployment
+- [StatefulSet](https://github.com/oam-dev/catalog/blob/master/workloads/statefulset/README.md)
+- [Deployment](https://github.com/oam-dev/catalog/blob/master/workloads/deployment/README.md)
 
 ## Prerequisites
 Please follow [addon-oam-kubernetes-local](https://github.com/crossplane/addon-oam-kubernetes-local) to install OAM Controllers.
@@ -26,7 +27,104 @@ make install
 go run main.go
 ```
 
-## Two examples
+## Three examples
+
+### Deployment and IngressTrait which defines `backend`
+- Apply the sample Deployment
+```
+kubectl apply -f config/samples/deployment
+```
+In this example, we use Deployment to show how IngressTrait works. Because it has no Service itself, but we have defined `ingresstrait.spec.rules.paths.backend`. We can just use this Service to create a corresponding ingress.
+So we don't have to define the Service backend.
+
+Please notice that IngressTrait's filed is a little different from K8s native ingress.
+```
+# ./config/samples/deployment/sample_workload_definition.yaml
+  
+apiVersion: core.oam.dev/v1alpha2
+kind: WorkloadDefinition
+metadata:
+  name: deployments.apps
+spec:
+  definitionRef:
+    name: deployments.apps
+```
+```
+# ./config/samples/deployment/sample_application_config.yaml
+
+  ...
+      traits:
+        - trait:
+            apiVersion: core.oam.dev/v1alpha2
+            kind: IngressTrait
+            metadata:
+              name: example-ingress-trait
+            spec:
+                rules:
+                  - host: nginx.oam.com
+                    paths:
+                      - path: /
+                        backend:
+                          serviceName: deploy-test
+                          servicePort: 8080
+```
+- Verify IngressTrait you should see a deployment looking like below
+```
+kubectl get deployment
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+web    1/1     1            1           32s
+```
+- And a service created by IngressTrait
+```
+kubectl get service
+NAME          TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+deploy-test   LoadBalancer   10.108.95.103   <pending>     8080:32105/TCP   42s
+```
+- You should see a ingress and it's rules looking like below
+```
+kubectl get ingress
+NAME                    HOSTS           ADDRESS      PORTS   AGE
+example-ingress-trait   nginx.oam.com   172.18.0.2   80      53s
+
+kubectl describe ingress
+...
+Rules:
+  Host           Path  Backends
+  ----           ----  --------
+  nginx.oam.com  
+                 /   deploy-test:8080 (10.244.1.11:80)
+...
+```
+- Verrify Ingress works
+```
+# curl -H "host: nginx.oam.com" 172.18.0.2
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
 
 ### ContainerizedWorkload
 - Apply the sample ContainerizedWorkload
@@ -93,38 +191,9 @@ Rules:
                  /   example-appconfig-workload:80 (10.244.1.19:80)
 ...
 ```
-- Verrify Ingress works
-```
-# curl -H "host: nginx.oam.com" 172.18.0.2
+- Verrify Ingress works and the result is same as Deployment
 
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-```
-
-### K8S native resources
+### StatefulSet and IngressTrait which doesn't define `backend`
 - Apply the sample StatefulSet
 ```
 kubectl apply -f config/samples/statefulset
@@ -161,13 +230,13 @@ spec:
                       - path: /
 ```
 
-- Verify IngressTrait you should see a deployment created by ContainerizedWorkload
+- Verify IngressTrait you should see a statefulset looking like below
 ```
 kubectl get statefulset
 NAME   READY   AGE
 web    1/1     6s
 ```
-- And a service created by ContainerizedWorkload
+- And a service created by IngressTrait
 ```
 kubectl get service
 NAME   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
@@ -188,33 +257,4 @@ Rules:
                  /   test:80 (10.244.1.20:80)
 ...
 ```
-- Verrify Ingress works
-```
-# curl -H "host: nginx.oam.com" 172.18.0.2
-
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
-
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
-```
+- Verrify Ingress works and the result is same as Deployment

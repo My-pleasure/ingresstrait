@@ -138,6 +138,12 @@ func ServiceInjector(ctx context.Context, t *corev1alpha2.IngressTrait, objs []o
 				}
 			}
 
+			var initialValue corev1alpha2.OptionalBackend
+			if t.Spec.Rules[0].Paths[0].Backend != initialValue {
+				s.Name = t.Spec.Rules[0].Paths[0].Backend.ServiceName
+				s.Spec.Ports[0].Port = t.Spec.Rules[0].Paths[0].Backend.ServicePort.IntVal
+			}
+
 			s.Spec.Selector = deploy.Spec.Selector.MatchLabels
 		} else if o.GetObjectKind().GroupVersionKind().Kind == KindStatefulSet {
 			var set appsv1.StatefulSet
@@ -159,6 +165,12 @@ func ServiceInjector(ctx context.Context, t *corev1alpha2.IngressTrait, objs []o
 						Protocol:   corev1.ProtocolTCP,
 					},
 				}
+			}
+
+			var initialValue corev1alpha2.OptionalBackend
+			if t.Spec.Rules[0].Paths[0].Backend != initialValue {
+				s.Name = t.Spec.Rules[0].Paths[0].Backend.ServiceName
+				s.Spec.Ports[0].Port = t.Spec.Rules[0].Paths[0].Backend.ServicePort.IntVal
 			}
 
 			s.Spec.Selector = set.Spec.Selector.MatchLabels
