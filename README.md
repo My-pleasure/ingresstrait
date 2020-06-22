@@ -1,7 +1,7 @@
 # IngressTrait
-- If the workload type is K8S native resources which has no service and defines `ingresstrait.spec.rules.paths.backend`, IngressTrait will create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create corresponding ingress. 
-- If the workload type is [ContainerizedWorkload](https://github.com/crossplane/addon-oam-kubernetes-local) which has two child resources (Deployment and Service), IngressTrait can help to create corresponding ingress based on the child Service.
-- If the workload type is K8S native resources which has no service and doesn't define `ingresstrait.spec.rules.paths.backend`, IngressTrait can help to create a Service based on `spec.template.spec.contaiers` firstly, and then create corresponding ingress. 
+- If the workload type is K8S native resources which has no service and defines `ingresstrait.spec.rules.paths.backend`, IngressTrait will create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create corresponding ingress.
+- If the workload type is K8S native resources which has no service and doesn't define `ingresstrait.spec.rules.paths.backend`, IngressTrait can help to create a service based on `spec.template.spec.contaiers` firstly, and then create corresponding ingress.  
+- If the workload type is [ContainerizedWorkload](https://github.com/crossplane/addon-oam-kubernetes-local) which has two child resources (Deployment and Service), IngressTrait can help to create corresponding ingress based on the child service.
 
 ## Supported workloads:
 - ContainerizedWorkload
@@ -34,8 +34,7 @@ go run main.go
 ```
 kubectl apply -f config/samples/deployment
 ```
-In this example, we use Deployment to show how IngressTrait works. Because it has no Service itself, but we have defined `ingresstrait.spec.rules.paths.backend`. We can just use this Service to create a corresponding ingress.
-So we don't have to define the Service backend.
+In this example, we use Deployment to show how IngressTrait works. Because it has no Service itself, but we have defined `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create a corresponding ingress.
 
 Please notice that IngressTrait's filed is a little different from K8s native ingress.
 ```
@@ -126,6 +125,72 @@ Commercial support is available at
 </html>
 ```
 
+### StatefulSet and IngressTrait which doesn't define `backend`
+- Apply the sample StatefulSet
+```
+kubectl apply -f config/samples/statefulset
+```
+In this example, we use StatefulSet to show how IngressTrait works. Because it has no Service itself and doesn't define `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service just based on `workload.spec.template.spec.contaiers`, and then create a corresponding ingress.
+So we don't have to define the Service backend either.
+
+Please notice that IngressTrait's filed is a little different from K8s native ingress.
+```
+# ./config/samples/statefulset/sample_workload_definition.yaml
+  
+apiVersion: core.oam.dev/v1alpha2
+kind: WorkloadDefinition
+metadata:
+  name: statefulsets.apps
+spec:
+  definitionRef:
+    name: statefulsets.apps
+```
+```
+# ./config/samples/statefulset/sample_application_config.yaml
+
+  ...
+      traits:
+        - trait:
+            apiVersion: core.oam.dev/v1alpha2
+            kind: IngressTrait
+            metadata:
+              name: example-ingress-trait
+            spec:
+                rules:
+                  - host: nginx.oam.com
+                    paths:
+                      - path: /
+```
+
+- Verify IngressTrait you should see a statefulset looking like below
+```
+kubectl get statefulset
+NAME   READY   AGE
+web    1/1     6s
+```
+- And a service created by IngressTrait
+```
+kubectl get service
+NAME   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+test   LoadBalancer   10.96.198.230   <pending>     80:32424/TCP   19s
+```
+- You should see a ingress and it's rules looking like below
+```
+kubectl get ingress
+NAME                    HOSTS           ADDRESS      PORTS   AGE
+example-ingress-trait   nginx.oam.com   172.18.0.2   80      23s
+
+kubectl describe ingress
+...
+Rules:
+  Host           Path  Backends
+  ----           ----  --------
+  nginx.oam.com  
+                 /   test:80 (10.244.1.20:80)
+...
+```
+- Verrify Ingress works and the result is same as Deployment
+
 ### ContainerizedWorkload
 - Apply the sample ContainerizedWorkload
 ```
@@ -189,72 +254,6 @@ Rules:
   ----           ----  --------
   nginx.oam.com  
                  /   example-appconfig-workload:80 (10.244.1.19:80)
-...
-```
-- Verrify Ingress works and the result is same as Deployment
-
-### StatefulSet and IngressTrait which doesn't define `backend`
-- Apply the sample StatefulSet
-```
-kubectl apply -f config/samples/statefulset
-```
-In this example, we use StatefulSet to show how IngressTrait works. Because it has no Service itself, IngressTrait can create a service and a corresponding ingress.
-So we don't have to define the Service backend either.
-
-Please notice that IngressTrait's filed is a little different from K8s native ingress.
-```
-# ./config/samples/contaierized/sample_workload_definition.yaml
-  
-apiVersion: core.oam.dev/v1alpha2
-kind: WorkloadDefinition
-metadata:
-  name: statefulsets.apps
-spec:
-  definitionRef:
-    name: statefulsets.apps
-```
-```
-# ./config/samples/contaierized/sample_application_config.yaml
-
-  ...
-      traits:
-        - trait:
-            apiVersion: core.oam.dev/v1alpha2
-            kind: IngressTrait
-            metadata:
-              name: example-ingress-trait
-            spec:
-                rules:
-                  - host: nginx.oam.com
-                    paths:
-                      - path: /
-```
-
-- Verify IngressTrait you should see a statefulset looking like below
-```
-kubectl get statefulset
-NAME   READY   AGE
-web    1/1     6s
-```
-- And a service created by IngressTrait
-```
-kubectl get service
-NAME   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-test   LoadBalancer   10.96.198.230   <pending>     80:32424/TCP   19s
-```
-- You should see a ingress and it's rules looking like below
-```
-kubectl get ingress
-NAME                    HOSTS           ADDRESS      PORTS   AGE
-example-ingress-trait   nginx.oam.com   172.18.0.2   80      23s
-
-kubectl describe ingress
-...
-Rules:
-  Host           Path  Backends
-  ----           ----  --------
-  nginx.oam.com  
-                 /   test:80 (10.244.1.20:80)
 ...
 ```
 - Verrify Ingress works and the result is same as Deployment
