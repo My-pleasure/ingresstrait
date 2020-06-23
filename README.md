@@ -1,6 +1,5 @@
 # IngressTrait
-- If the workload type is K8S native resources which has no service and defines `ingresstrait.spec.rules.paths.backend`, IngressTrait will create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create corresponding ingress.
-- If the workload type is K8S native resources which has no service and doesn't define `ingresstrait.spec.rules.paths.backend`, IngressTrait can help to create a service based on `spec.template.spec.contaiers` firstly, and then create corresponding ingress.  
+- If the workload type is K8S native resources which has no service , IngressTrait can help to create a service based on `workload.spec.template.spec.contaiers` firstly, and then create corresponding ingress.  
 - If the workload type is [ContainerizedWorkload](https://github.com/crossplane/addon-oam-kubernetes-local) which has two child resources (Deployment and Service), IngressTrait can help to create corresponding ingress based on the child service.
 
 ## Supported workloads:
@@ -29,12 +28,12 @@ go run main.go
 
 ## Three examples
 
-### Deployment and IngressTrait which defines `backend`
+### K8s native Deployment
 - Apply the sample Deployment
 ```
 kubectl apply -f config/samples/deployment
 ```
-In this example, we use Deployment to show how IngressTrait works. Because it has no Service itself, but we have defined `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service based on `backend` and `workload.spec.template.spec.contaiers`, then create a corresponding ingress.
+In this example, we use Deployment to show how IngressTrait works. Because it has no Service itself, but we have defined `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service based on `backend` and `deployment.spec.template.spec.contaiers`, then create a corresponding ingress.
 
 Please notice that IngressTrait's filed is a little different from K8s native ingress.
 ```
@@ -125,12 +124,12 @@ Commercial support is available at
 </html>
 ```
 
-### StatefulSet and IngressTrait which doesn't define `backend`
+### K8s native StatefulSet
 - Apply the sample StatefulSet
 ```
 kubectl apply -f config/samples/statefulset
 ```
-In this example, we use StatefulSet to show how IngressTrait works. Because it has no Service itself and doesn't define `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service just based on `workload.spec.template.spec.contaiers`, and then create a corresponding ingress.
+In this example, we use StatefulSet to show how IngressTrait works. Because it has no Service itself and doesn't define `ingresstrait.spec.rules.paths.backend`. So IngressTrait can create a service just based on `statefulset.spec.template.spec.contaiers`, and then create a corresponding ingress.
 So we don't have to define the Service backend either.
 
 Please notice that IngressTrait's filed is a little different from K8s native ingress.
